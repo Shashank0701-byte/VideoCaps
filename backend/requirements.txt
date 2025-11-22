@@ -28,3 +28,7 @@ googletrans==4.0.0rc1
 # openai-whisper
 # torch
 # numpy
+
+# Video Processing (requires FFmpeg installed on system)
+# FFmpeg must be installed and available in PATH for subtitle burning
+# Download from: https://ffmpeg.org/download.html

@@ -309,6 +309,42 @@ async def download_vtt(segments: list, filename: str = "subtitles", include_spea
         }
 
 
+
+@app.post("/burn-subtitles")
+async def burn_subtitles(segments: list, filename: str):
+    """
+    Burn subtitles into the video file and return the processed video.
+    
+    Args:
+        segments: List of transcript segments
+        filename: Original video filename (must exist in uploads)
+        
+    Returns:
+        Video file with burned subtitles
+    """
+    try:
+        from fastapi.responses import FileResponse
+        from app.services.video_processor import video_processor
+        
+        logger.info(f"Burning subtitles for {filename} with {len(segments)} segments")
+        
+        # Ensure filename is clean (security check)
+        filename = os.path.basename(filename)
+        
+        output_path = video_processor.burn_subtitles(filename, segments)
+        
+        return FileResponse(
+            path=output_path,
+            filename=f"subtitled_{filename}",
+            media_type="video/mp4"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error burning subtitles: {e}")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/translate")
 async def translate_text_endpoint(
     text: str,

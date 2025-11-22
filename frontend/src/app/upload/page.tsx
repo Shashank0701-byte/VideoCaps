@@ -62,6 +62,7 @@ export default function UploadPage() {
     const [result, setResult] = useState<TranscriptionResult | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [targetLanguage, setTargetLanguage] = useState<string>('none');
+    const [isBurning, setIsBurning] = useState(false);
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -185,6 +186,41 @@ export default function UploadPage() {
             setError(err instanceof Error ? err.message : `Failed to download ${format.toUpperCase()}`);
         }
     };
+
+    const burnSubtitles = async () => {
+        if (!result) return;
+
+        setIsBurning(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`${API_URL}/burn-subtitles`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    segments: result.transcription.segments,
+                    filename: result.filename,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to burn subtitles into video');
+            }
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `subtitled_${result.filename}`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to burn subtitles');
+        } finally {
+            setIsBurning(false);
+        }
+    };
+
     const getSpeakerColor = (speaker?: string) => {
         if (!speaker) return 'text-blue-400';
         const colors = [
@@ -379,8 +415,27 @@ export default function UploadPage() {
                                     <button onClick={() => downloadSubtitle('srt')} className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 flex items-center gap-2">
                                         <span>📝</span> SRT Subtitles
                                     </button>
-                                    <button onClick={() => downloadSubtitle('vtt')} className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-b-lg flex items-center gap-2">
+                                    <button onClick={() => downloadSubtitle('vtt')} className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 flex items-center gap-2">
                                         <span>🎬</span> VTT Subtitles
+                                    </button>
+                                    <button
+                                        onClick={burnSubtitles}
+                                        disabled={isBurning}
+                                        className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-b-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isBurning ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                </svg>
+                                                <span>Processing...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>🔥</span> Burn Subtitles (Video)
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
