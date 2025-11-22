@@ -9,6 +9,9 @@ aiofiles==24.1.0
 # Translation
 googletrans==4.0.0rc1
 
+# Text Post-processing (optional - for ML-based punctuation)
+# deepmultilingualpunctuation
+
 # Speaker Diarization (optional - install separately if needed)
 # pyannote.audio
 # librosa==0.10.1

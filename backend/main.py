@@ -111,6 +111,25 @@ async def upload_file(
                 "message": result["error"]
             }
         
+        # Apply text post-processing
+        try:
+            from app.services.text_postprocessing import apply_postprocessing
+            
+            logger.info("Applying text post-processing...")
+            postprocessed = apply_postprocessing(
+                result.get("text", ""),
+                result.get("segments")
+            )
+            
+            # Update result with processed text and segments
+            result["text"] = postprocessed["text"]
+            if postprocessed["segments"]:
+                result["segments"] = postprocessed["segments"]
+            
+            logger.info("Text post-processing complete")
+        except Exception as e:
+            logger.warning(f"Text post-processing failed: {e}, continuing with raw text")
+        
         # Perform speaker diarization
         diarization_segments = []
         try:
