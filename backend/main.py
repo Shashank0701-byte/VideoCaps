@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 import uvicorn
 import logging
 import json
@@ -36,10 +37,17 @@ async def health_check():
 
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    file: UploadFile = File(...),
+    translate_to: Optional[str] = None
+):
     """
     Upload audio/video file for transcription.
     Accepts audio and video files, extracts audio, and returns full transcription.
+    
+    Args:
+        file: Audio/video file to transcribe
+        translate_to: Optional language code to translate transcription to
     """
     import tempfile
     import os
@@ -103,8 +111,25 @@ async def upload_file(file: UploadFile = File(...)):
                 "message": result["error"]
             }
         
+        # Translate if requested
+        translated_text = None
+        translated_segments = None
+        
+        if translate_to:
+            from app.services.translation_service import translate_text, translate_segments
+            
+            logger.info(f"Translating to {translate_to}...")
+            
+            # Translate full text
+            translation = translate_text(result["text"], target_lang=translate_to)
+            translated_text = translation.get("translated_text")
+            
+            # Translate segments if available
+            if result.get("segments"):
+                translated_segments = translate_segments(result["segments"], target_lang=translate_to)
+        
         # Return results
-        return {
+        response = {
             "success": True,
             "filename": file.filename,
             "duration": duration,
@@ -114,6 +139,16 @@ async def upload_file(file: UploadFile = File(...)):
                 "segments": result.get("segments", [])
             }
         }
+        
+        # Add translation if performed
+        if translate_to and translated_text:
+            response["translation"] = {
+                "text": translated_text,
+                "target_language": translate_to,
+                "segments": translated_segments
+            }
+        
+        return response
         
     except Exception as e:
         logger.error(f"Error processing upload: {e}", exc_info=True)
@@ -130,6 +165,75 @@ async def upload_file(file: UploadFile = File(...)):
             logger.info("Cleaned up temporary files")
         except Exception as e:
             logger.error(f"Error cleaning up: {e}")
+
+
+@app.post("/translate")
+async def translate_text_endpoint(
+    text: str,
+    target_lang: str = "en",
+    source_lang: str = "auto"
+):
+    """
+    Translate text to target language.
+    
+    Args:
+        text: Text to translate
+        target_lang: Target language code (default: "en")
+        source_lang: Source language code (default: "auto")
+    """
+    from app.services.translation_service import translate_text
+    
+    try:
+        result = translate_text(text, target_lang=target_lang, source_lang=source_lang)
+        return result
+    except Exception as e:
+        logger.error(f"Translation error: {e}")
+        return {
+            "error": "Translation failed",
+            "message": str(e)
+        }
+
+
+@app.post("/detect-language")
+async def detect_language_endpoint(text: str):
+    """
+    Detect the language of the given text.
+    
+    Args:
+        text: Text to detect language for
+    """
+    from app.services.translation_service import detect_language
+    
+    try:
+        result = detect_language(text)
+        return result
+    except Exception as e:
+        logger.error(f"Language detection error: {e}")
+        return {
+            "error": "Detection failed",
+            "message": str(e)
+        }
+
+
+@app.get("/languages")
+async def get_supported_languages_endpoint():
+    """
+    Get list of supported languages for translation.
+    """
+    from app.services.translation_service import get_supported_languages
+    
+    try:
+        languages = get_supported_languages()
+        return {
+            "languages": languages,
+            "count": len(languages)
+        }
+    except Exception as e:
+        logger.error(f"Error getting languages: {e}")
+        return {
+            "error": "Failed to get languages",
+            "message": str(e)
+        }
 
 
 @app.websocket("/ws/transcribe")
