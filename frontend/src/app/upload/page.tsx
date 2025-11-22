@@ -161,7 +161,30 @@ export default function UploadPage() {
         a.click();
         URL.revokeObjectURL(url);
     };
-
+    const downloadSubtitle = async (format: 'srt' | 'vtt') => {
+        if (!result) return;
+        try {
+            const response = await fetch(`${API_URL}/download/${format}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    segments: result.transcription.segments,
+                    filename: result.filename.replace(/\.[^/.]+$/, ''),
+                    include_speaker: true,
+                }),
+            });
+            if (!response.ok) throw new Error(`Failed to generate ${format.toUpperCase()} file`);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${result.filename.replace(/\.[^/.]+$/, '')}.${format}`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : `Failed to download ${format.toUpperCase()}`);
+        }
+    };
     const getSpeakerColor = (speaker?: string) => {
         if (!speaker) return 'text-blue-400';
         const colors = [
@@ -339,25 +362,28 @@ export default function UploadPage() {
                                     <span>🌐 {result.transcription.language.toUpperCase()}</span>
                                 </div>
                             </div>
-                            <button
-                                onClick={downloadTranscript}
-                                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-                            >
-                                <svg
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                                    />
-                                </svg>
-                                Download
-                            </button>
+                            <div className="relative group">
+                                <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2">
+                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Download
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 border border-gray-700">
+                                    <button onClick={downloadTranscript} className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-t-lg flex items-center gap-2">
+                                        <span>📄</span> Text (.txt)
+                                    </button>
+                                    <button onClick={() => downloadSubtitle('srt')} className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 flex items-center gap-2">
+                                        <span>📝</span> SRT Subtitles
+                                    </button>
+                                    <button onClick={() => downloadSubtitle('vtt')} className="w-full text-left px-4 py-2 text-white hover:bg-gray-700 rounded-b-lg flex items-center gap-2">
+                                        <span>🎬</span> VTT Subtitles
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Analysis Results */}

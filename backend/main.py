@@ -235,6 +235,80 @@ async def upload_file(
             logger.error(f"Error cleaning up: {e}")
 
 
+@app.post("/download/srt")
+async def download_srt(segments: list, filename: str = "subtitles", include_speaker: bool = True):
+    """
+    Convert transcript segments to SRT format and return as downloadable file.
+    
+    Args:
+        segments: List of transcript segments
+        filename: Base filename for download
+        include_speaker: Whether to include speaker labels
+        
+    Returns:
+        SRT file content
+    """
+    try:
+        from fastapi.responses import Response
+        from app.services.subtitle_converter import segments_to_srt
+        
+        logger.info(f"Generating SRT file with {len(segments)} segments")
+        
+        srt_content = segments_to_srt(segments, include_speaker)
+        
+        return Response(
+            content=srt_content,
+            media_type="text/plain",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}.srt"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating SRT: {e}")
+        return {
+            "error": "SRT generation failed",
+            "message": str(e)
+        }
+
+
+@app.post("/download/vtt")
+async def download_vtt(segments: list, filename: str = "subtitles", include_speaker: bool = True):
+    """
+    Convert transcript segments to VTT format and return as downloadable file.
+    
+    Args:
+        segments: List of transcript segments
+        filename: Base filename for download
+        include_speaker: Whether to include speaker labels
+        
+    Returns:
+        VTT file content
+    """
+    try:
+        from fastapi.responses import Response
+        from app.services.subtitle_converter import segments_to_vtt
+        
+        logger.info(f"Generating VTT file with {len(segments)} segments")
+        
+        vtt_content = segments_to_vtt(segments, include_speaker)
+        
+        return Response(
+            content=vtt_content,
+            media_type="text/vtt",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}.vtt"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating VTT: {e}")
+        return {
+            "error": "VTT generation failed",
+            "message": str(e)
+        }
+
+
 @app.post("/translate")
 async def translate_text_endpoint(
     text: str,
