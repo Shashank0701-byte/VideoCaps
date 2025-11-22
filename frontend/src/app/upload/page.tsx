@@ -26,6 +26,30 @@ interface TranscriptionResult {
             end: number;
         }>;
     };
+    analysis?: {
+        summary: {
+            summary: string;
+            type: string;
+            word_count?: number;
+            compression_ratio?: number;
+        };
+        keywords: Array<{
+            keyword: string;
+            score: number;
+            rank: number;
+        }>;
+        key_points: string[];
+        statistics: {
+            word_count: number;
+            sentence_count: number;
+        };
+        segment_insights?: {
+            total_duration: number;
+            num_speakers: number;
+            speakers: string[];
+            avg_segment_duration: number;
+        };
+    };
     error?: string;
     message?: string;
 }
@@ -165,7 +189,7 @@ export default function UploadPage() {
                         Upload & Transcribe
                     </h1>
                     <p className="text-xl text-gray-400">
-                        Upload audio or video files to generate transcripts with speaker identification
+                        Upload audio or video files for AI-powered transcription, translation, and analysis
                     </p>
                 </div>
 
@@ -177,48 +201,46 @@ export default function UploadPage() {
                             <label className="block text-sm font-medium text-gray-300 mb-2">
                                 Select File
                             </label>
-                            <div className="flex items-center gap-4">
-                                <label className="flex-1 cursor-pointer">
-                                    <div className="border-2 border-dashed border-gray-700 hover:border-gray-600 rounded-lg p-8 text-center transition-colors">
-                                        <svg
-                                            className="mx-auto h-12 w-12 text-gray-500 mb-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                                            />
-                                        </svg>
-                                        {file ? (
-                                            <div>
-                                                <p className="text-white font-medium">{file.name}</p>
-                                                <p className="text-gray-500 text-sm mt-1">
-                                                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                <p className="text-gray-400">
-                                                    Click to select or drag and drop
-                                                </p>
-                                                <p className="text-gray-600 text-sm mt-1">
-                                                    MP3, WAV, MP4, AVI, MOV, MKV, WebM
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <input
-                                        type="file"
-                                        onChange={handleFileChange}
-                                        accept="audio/*,video/*"
-                                        className="hidden"
-                                    />
-                                </label>
-                            </div>
+                            <label className="flex-1 cursor-pointer block">
+                                <div className="border-2 border-dashed border-gray-700 hover:border-gray-600 rounded-lg p-8 text-center transition-colors">
+                                    <svg
+                                        className="mx-auto h-12 w-12 text-gray-500 mb-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                        />
+                                    </svg>
+                                    {file ? (
+                                        <div>
+                                            <p className="text-white font-medium">{file.name}</p>
+                                            <p className="text-gray-500 text-sm mt-1">
+                                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <p className="text-gray-400">
+                                                Click to select or drag and drop
+                                            </p>
+                                            <p className="text-gray-600 text-sm mt-1">
+                                                MP3, WAV, MP4, AVI, MOV, MKV, WebM
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    onChange={handleFileChange}
+                                    accept="audio/*,video/*"
+                                    className="hidden"
+                                />
+                            </label>
                         </div>
 
                         {/* Language Selection */}
@@ -335,6 +357,129 @@ export default function UploadPage() {
                                 Download
                             </button>
                         </div>
+
+                        {/* Analysis Results */}
+                        {result.analysis && (
+                            <div className="mb-6 pb-6 border-b border-gray-800">
+                                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                    <svg
+                                        className="h-5 w-5 text-purple-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                        />
+                                    </svg>
+                                    Analysis & Insights
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Summary */}
+                                    {result.analysis.summary && result.analysis.summary.summary && (
+                                        <div className="md:col-span-2">
+                                            <h4 className="text-md font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                                                📝 Summary
+                                                {result.analysis.summary.compression_ratio && (
+                                                    <span className="text-xs text-gray-500">
+                                                        ({result.analysis.summary.compression_ratio}x compression)
+                                                    </span>
+                                                )}
+                                            </h4>
+                                            <div className="bg-gray-800 rounded-lg p-4">
+                                                <p className="text-gray-200 leading-relaxed">
+                                                    {result.analysis.summary.summary}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Keywords */}
+                                    {result.analysis.keywords && result.analysis.keywords.length > 0 && (
+                                        <div>
+                                            <h4 className="text-md font-semibold text-gray-300 mb-2">
+                                                🏷️ Keywords
+                                            </h4>
+                                            <div className="bg-gray-800 rounded-lg p-4">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {result.analysis.keywords.slice(0, 8).map((kw, index) => (
+                                                        <span
+                                                            key={index}
+                                                            className="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-full text-sm border border-blue-500/30"
+                                                        >
+                                                            {kw.keyword}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Statistics */}
+                                    {result.analysis.statistics && (
+                                        <div>
+                                            <h4 className="text-md font-semibold text-gray-300 mb-2">
+                                                📊 Statistics
+                                            </h4>
+                                            <div className="bg-gray-800 rounded-lg p-4 space-y-2">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-400">Words:</span>
+                                                    <span className="text-white font-medium">
+                                                        {result.analysis.statistics.word_count}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-400">Sentences:</span>
+                                                    <span className="text-white font-medium">
+                                                        {result.analysis.statistics.sentence_count}
+                                                    </span>
+                                                </div>
+                                                {result.analysis.segment_insights && (
+                                                    <>
+                                                        <div className="flex justify-between">
+                                                            <span className="text-gray-400">Speakers:</span>
+                                                            <span className="text-white font-medium">
+                                                                {result.analysis.segment_insights.num_speakers}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span className="text-gray-400">Duration:</span>
+                                                            <span className="text-white font-medium">
+                                                                {Math.floor(result.analysis.segment_insights.total_duration / 60)}m{' '}
+                                                                {Math.floor(result.analysis.segment_insights.total_duration % 60)}s
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Key Points */}
+                                    {result.analysis.key_points && result.analysis.key_points.length > 0 && (
+                                        <div className="md:col-span-2">
+                                            <h4 className="text-md font-semibold text-gray-300 mb-2">
+                                                💡 Key Points
+                                            </h4>
+                                            <div className="bg-gray-800 rounded-lg p-4">
+                                                <ul className="space-y-2">
+                                                    {result.analysis.key_points.map((point, index) => (
+                                                        <li key={index} className="flex items-start gap-2 text-gray-200">
+                                                            <span className="text-blue-400 mt-1">•</span>
+                                                            <span>{point}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Full Transcript */}
                         <div className="mb-6">

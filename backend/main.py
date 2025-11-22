@@ -155,39 +155,66 @@ async def upload_file(
         # Translate if requested
         translated_text = None
         translated_segments = None
+        if translate_to and translate_to != "none":
+            try:
+                from app.services.translation_service import translate_text, translate_segments
+                
+                logger.info(f"Translating to {translate_to}...")
+                translated_text = translate_text(result["text"], translate_to)
+                
+                if result.get("segments"):
+                    translated_segments = translate_segments(result["segments"], translate_to)
+                
+                logger.info("Translation complete")
+            except Exception as e:
+                logger.error(f"Translation failed: {e}")
         
-        if translate_to:
-            from app.services.translation_service import translate_text, translate_segments
+        # Generate summary and extract keywords
+        analysis = None
+        try:
+            from app.services.summary_keywords import analyze_transcription
             
-            logger.info(f"Translating to {translate_to}...")
-            
-            # Translate full text
-            translation = translate_text(result["text"], target_lang=translate_to)
-            translated_text = translation.get("translated_text")
-            
-            # Translate segments if available
-            if result.get("segments"):
-                translated_segments = translate_segments(result["segments"], target_lang=translate_to)
+            logger.info("Generating summary and extracting keywords...")
+            analysis = analyze_transcription(result["text"], result.get("segments"))
+            logger.info("Analysis complete")
+        except Exception as e:
+            logger.warning(f"Summary/keyword extraction failed: {e}, continuing without it")
         
-        # Return results
+        # Build response
         response = {
             "success": True,
             "filename": file.filename,
             "duration": duration,
             "transcription": {
                 "text": result["text"],
-                "language": result["language"],
+                "language": result.get("language", "unknown"),
                 "segments": result.get("segments", [])
             }
         }
         
-        # Add translation if performed
-        if translate_to and translated_text:
+        # Add translation if available
+        if translated_text:
             response["translation"] = {
                 "text": translated_text,
                 "target_language": translate_to,
                 "segments": translated_segments
             }
+        
+        # Add analysis if available
+        if analysis:
+            response["analysis"] = {
+                "summary": analysis.get("summary", {}),
+                "keywords": analysis.get("keywords", []),
+                "key_points": analysis.get("key_points", []),
+                "statistics": {
+                    "word_count": analysis.get("word_count", 0),
+                    "sentence_count": analysis.get("sentence_count", 0)
+                }
+            }
+            
+            # Add segment insights if available
+            if "segment_insights" in analysis:
+                response["analysis"]["segment_insights"] = analysis["segment_insights"]
         
         return response
         

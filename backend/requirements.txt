@@ -9,6 +9,13 @@ aiofiles==24.1.0
 # Translation
 googletrans==4.0.0rc1
 
+# Summary and Keyword Extraction (optional)
+# transformers==4.35.0
+# torch==2.1.0
+# keybert==0.8.3
+# sentence-transformers==2.2.2
+# rake-nltk==1.0.6
+
 # Text Post-processing (optional - for ML-based punctuation)
 # deepmultilingualpunctuation
 
