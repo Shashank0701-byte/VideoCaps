@@ -242,20 +242,26 @@ export default function UploadPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-950 py-12">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen py-12 relative overflow-hidden">
+            {/* Animated background */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-10 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
+                <div className="absolute bottom-10 left-10 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
+            </div>
+
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Header */}
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-white mb-4">
-                        Upload & Transcribe
+                <div className="text-center mb-12 animate-float">
+                    <h1 className="text-5xl md:text-6xl font-bold mb-4">
+                        <span className="gradient-text">Upload & Transcribe</span>
                     </h1>
-                    <p className="text-xl text-gray-400">
-                        Upload audio or video files for AI-powered transcription, translation, and analysis
+                    <p className="text-xl text-gray-300 font-light">
+                        AI-powered transcription, translation, and analysis
                     </p>
                 </div>
 
                 {/* Upload Section */}
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
+                <div className="glass rounded-2xl p-8 mb-8 card-hover">
                     <div className="space-y-6">
                         {/* File Input */}
                         <div>
@@ -263,7 +269,7 @@ export default function UploadPage() {
                                 Select File
                             </label>
                             <label className="flex-1 cursor-pointer block">
-                                <div className="border-2 border-dashed border-gray-700 hover:border-gray-600 rounded-lg p-8 text-center transition-colors">
+                                <div className="glass-hover border-2 border-dashed border-gray-600/50 hover:border-blue-500/50 rounded-xl p-10 text-center transition-all">
                                     <svg
                                         className="mx-auto h-12 w-12 text-gray-500 mb-4"
                                         fill="none"
@@ -312,7 +318,7 @@ export default function UploadPage() {
                             <select
                                 value={targetLanguage}
                                 onChange={(e) => setTargetLanguage(e.target.value)}
-                                className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full glass border border-gray-600/50 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                             >
                                 {popularLanguages.map((lang) => (
                                     <option key={lang.code} value={lang.code}>
@@ -329,7 +335,7 @@ export default function UploadPage() {
                         <button
                             onClick={handleUpload}
                             disabled={!file || isUploading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-700 disabled:to-gray-800 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg hover:shadow-blue-500/50 disabled:shadow-none flex items-center justify-center gap-2"
                         >
                             {isUploading ? (
                                 <>
@@ -377,15 +383,20 @@ export default function UploadPage() {
 
                     {/* Error Message */}
                     {error && (
-                        <div className="mt-4 bg-red-900/50 border border-red-500 rounded-lg p-4">
-                            <p className="text-red-300">{error}</p>
+                        <div className="mt-4 bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                            <p className="text-red-300 flex items-center gap-2">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {error}
+                            </p>
                         </div>
                     )}
                 </div>
 
                 {/* Results Section */}
                 {result && (
-                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
+                    <div className="glass rounded-2xl p-8 card-hover">
                         {/* File Info */}
                         <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-800">
                             <div>
@@ -399,7 +410,7 @@ export default function UploadPage() {
                                 </div>
                             </div>
                             <div className="relative group">
-                                <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2">
+                                <button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-green-500/50 flex items-center gap-2">
                                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
