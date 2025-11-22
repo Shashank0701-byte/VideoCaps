@@ -80,8 +80,8 @@ async def websocket_transcribe(websocket: WebSocket):
                         "type": "transcription",
                         "text": result.get("text", ""),
                         "language": result.get("language", "en"),
-                        "timestamp": None,  # Add timestamp if needed
-                        "confidence": 1.0   # Add confidence score if available
+                        "timestamp": None,
+                        "confidence": 1.0
                     }
                     
                     await websocket.send_json(response)
@@ -114,7 +114,7 @@ async def websocket_transcribe(websocket: WebSocket):
     except WebSocketDisconnect:
         logger.info("Client disconnected from /ws/transcribe")
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error: {e}", exc_info=True)
         try:
             await websocket.send_json({
                 "type": "error",
