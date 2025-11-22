@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import EditableTranscript from '@/components/EditableTranscript';
 
 interface TranscriptionResult {
     success: boolean;
@@ -521,6 +522,45 @@ export default function UploadPage() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Editable Transcript */}
+                        {result.transcription.segments && result.transcription.segments.length > 0 && (
+                            <div className="mb-6">
+                                <h3 className="text-lg font-semibold text-white mb-3">
+                                    Editable Transcript
+                                </h3>
+                                <EditableTranscript
+                                    segments={result.transcription.segments}
+                                    onSegmentEdit={(index, newText) => {
+                                        const updatedSegments = [...result.transcription.segments];
+                                        updatedSegments[index] = {
+                                            ...updatedSegments[index],
+                                            text: newText,
+                                        };
+                                        setResult({
+                                            ...result,
+                                            transcription: {
+                                                ...result.transcription,
+                                                segments: updatedSegments,
+                                            },
+                                        });
+                                    }}
+                                    onFullTextChange={(newText) => {
+                                        setResult({
+                                            ...result,
+                                            transcription: {
+                                                ...result.transcription,
+                                                text: newText,
+                                            },
+                                        });
+                                    }}
+                                    showTimestamps={true}
+                                    showSpeakers={true}
+                                    editable={true}
+                                />
+                            </div>
+                        )}
+
 
                         {/* Translation Results */}
                         {result.translation && (
