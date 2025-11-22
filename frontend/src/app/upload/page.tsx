@@ -13,6 +13,7 @@ interface TranscriptionResult {
             text: string;
             start: number;
             end: number;
+            speaker?: string;
         }>;
     };
     translation?: {
@@ -135,6 +136,26 @@ export default function UploadPage() {
         URL.revokeObjectURL(url);
     };
 
+    const getSpeakerColor = (speaker?: string) => {
+        if (!speaker) return 'text-blue-400';
+        const colors = [
+            'text-blue-400',
+            'text-green-400',
+            'text-purple-400',
+            'text-yellow-400',
+            'text-pink-400',
+            'text-indigo-400',
+        ];
+        const speakerNum = parseInt(speaker.split('_')[1] || '0');
+        return colors[speakerNum % colors.length];
+    };
+
+    const formatSpeakerLabel = (speaker?: string) => {
+        if (!speaker) return '';
+        const num = parseInt(speaker.split('_')[1] || '0');
+        return `Speaker ${num + 1}`;
+    };
+
     return (
         <div className="min-h-screen bg-gray-950 py-12">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -144,7 +165,7 @@ export default function UploadPage() {
                         Upload & Transcribe
                     </h1>
                     <p className="text-xl text-gray-400">
-                        Upload audio or video files to generate transcripts
+                        Upload audio or video files to generate transcripts with speaker identification
                     </p>
                 </div>
 
@@ -327,11 +348,11 @@ export default function UploadPage() {
                             </div>
                         </div>
 
-                        {/* Segments */}
+                        {/* Segments with Speaker Labels */}
                         {result.transcription.segments && result.transcription.segments.length > 0 && (
                             <div className="mb-6">
                                 <h3 className="text-lg font-semibold text-white mb-3">
-                                    Segments
+                                    Segments with Speakers
                                 </h3>
                                 <div className="space-y-2 max-h-96 overflow-y-auto">
                                     {result.transcription.segments.map((segment, index) => (
@@ -340,9 +361,14 @@ export default function UploadPage() {
                                             className="bg-gray-800/50 rounded-lg p-4 hover:bg-gray-800 transition-colors"
                                         >
                                             <div className="flex items-start gap-3">
-                                                <span className="text-blue-400 font-mono text-sm mt-1">
+                                                <span className="text-blue-400 font-mono text-sm mt-1 min-w-[60px]">
                                                     {formatTimestamp(segment.start)}
                                                 </span>
+                                                {segment.speaker && (
+                                                    <span className={`font-semibold text-sm mt-1 min-w-[90px] ${getSpeakerColor(segment.speaker)}`}>
+                                                        {formatSpeakerLabel(segment.speaker)}
+                                                    </span>
+                                                )}
                                                 <p className="text-gray-200 flex-1">{segment.text}</p>
                                             </div>
                                         </div>

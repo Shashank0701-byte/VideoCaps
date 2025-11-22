@@ -9,6 +9,11 @@ aiofiles==24.1.0
 # Translation
 googletrans==4.0.0rc1
 
+# Speaker Diarization (optional - install separately if needed)
+# pyannote.audio
+# librosa==0.10.1
+# scikit-learn==1.3.2
+
 # For future Whisper integration (commented out for now)
 # openai-whisper
 # torch

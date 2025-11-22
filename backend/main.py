@@ -111,6 +111,28 @@ async def upload_file(
                 "message": result["error"]
             }
         
+        # Perform speaker diarization
+        diarization_segments = []
+        try:
+            from app.services.speaker_diarization import (
+                perform_speaker_diarization,
+                merge_transcription_with_diarization,
+                format_speaker_label
+            )
+            
+            logger.info("Starting speaker diarization...")
+            diarization_segments = perform_speaker_diarization(audio_path)
+            
+            # Merge diarization with transcription
+            if diarization_segments and result.get("segments"):
+                result["segments"] = merge_transcription_with_diarization(
+                    result["segments"],
+                    diarization_segments
+                )
+                logger.info("Merged transcription with speaker labels")
+        except Exception as e:
+            logger.warning(f"Speaker diarization failed: {e}, continuing without it")
+        
         # Translate if requested
         translated_text = None
         translated_segments = None
