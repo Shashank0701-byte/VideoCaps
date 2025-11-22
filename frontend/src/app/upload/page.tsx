@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import EditableTranscript from '@/components/EditableTranscript';
+import TimelineEditor from '@/components/TimelineEditor';
 
 interface TranscriptionResult {
     success: boolean;
@@ -560,6 +561,36 @@ export default function UploadPage() {
                                 />
                             </div>
                         )}
+
+                        {/* Timeline Editor */}
+                        {result.transcription.segments && result.transcription.segments.length > 0 && (
+                            <div className="mb-6">
+                                <h3 className="text-lg font-semibold text-white mb-3">
+                                    Timeline Editor
+                                </h3>
+                                <TimelineEditor
+                                    segments={result.transcription.segments}
+                                    totalDuration={result.duration}
+                                    onSegmentUpdate={(index, newStart, newEnd) => {
+                                        const updatedSegments = [...result.transcription.segments];
+                                        updatedSegments[index] = {
+                                            ...updatedSegments[index],
+                                            start: newStart,
+                                            end: newEnd,
+                                        };
+                                        setResult({
+                                            ...result,
+                                            transcription: {
+                                                ...result.transcription,
+                                                segments: updatedSegments,
+                                            },
+                                        });
+                                    }}
+                                    showWaveform={false}
+                                />
+                            </div>
+                        )}
+
 
 
                         {/* Translation Results */}
