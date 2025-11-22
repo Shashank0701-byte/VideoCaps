@@ -15,6 +15,16 @@ interface TranscriptionResult {
             end: number;
         }>;
     };
+    translation?: {
+        text: string;
+        target_language: string;
+        segments?: Array<{
+            text: string;
+            translated_text: string;
+            start: number;
+            end: number;
+        }>;
+    };
     error?: string;
     message?: string;
 }
@@ -24,8 +34,34 @@ export default function UploadPage() {
     const [isUploading, setIsUploading] = useState(false);
     const [result, setResult] = useState<TranscriptionResult | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [targetLanguage, setTargetLanguage] = useState<string>('none');
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+    // Popular languages for translation
+    const popularLanguages = [
+        { code: 'none', name: 'No Translation' },
+        { code: 'en', name: 'English' },
+        { code: 'es', name: 'Spanish' },
+        { code: 'fr', name: 'French' },
+        { code: 'de', name: 'German' },
+        { code: 'it', name: 'Italian' },
+        { code: 'pt', name: 'Portuguese' },
+        { code: 'ru', name: 'Russian' },
+        { code: 'ja', name: 'Japanese' },
+        { code: 'ko', name: 'Korean' },
+        { code: 'zh-cn', name: 'Chinese (Simplified)' },
+        { code: 'zh-tw', name: 'Chinese (Traditional)' },
+        { code: 'ar', name: 'Arabic' },
+        { code: 'hi', name: 'Hindi' },
+        { code: 'bn', name: 'Bengali' },
+        { code: 'ur', name: 'Urdu' },
+        { code: 'tr', name: 'Turkish' },
+        { code: 'nl', name: 'Dutch' },
+        { code: 'pl', name: 'Polish' },
+        { code: 'vi', name: 'Vietnamese' },
+        { code: 'th', name: 'Thai' },
+    ];
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -49,7 +85,13 @@ export default function UploadPage() {
             const formData = new FormData();
             formData.append('file', file);
 
-            const response = await fetch(`${API_URL}/upload`, {
+            // Build URL with translation parameter if selected
+            let url = `${API_URL}/upload`;
+            if (targetLanguage && targetLanguage !== 'none') {
+                url += `?translate_to=${targetLanguage}`;
+            }
+
+            const response = await fetch(url, {
                 method: 'POST',
                 body: formData,
             });
@@ -156,6 +198,27 @@ export default function UploadPage() {
                                     />
                                 </label>
                             </div>
+                        </div>
+
+                        {/* Language Selection */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Translate To (Optional)
+                            </label>
+                            <select
+                                value={targetLanguage}
+                                onChange={(e) => setTargetLanguage(e.target.value)}
+                                className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                {popularLanguages.map((lang) => (
+                                    <option key={lang.code} value={lang.code}>
+                                        {lang.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-gray-500 text-sm mt-2">
+                                Select a language to translate the transcript
+                            </p>
                         </div>
 
                         {/* Upload Button */}
@@ -266,7 +329,7 @@ export default function UploadPage() {
 
                         {/* Segments */}
                         {result.transcription.segments && result.transcription.segments.length > 0 && (
-                            <div>
+                            <div className="mb-6">
                                 <h3 className="text-lg font-semibold text-white mb-3">
                                     Segments
                                 </h3>
@@ -284,6 +347,33 @@ export default function UploadPage() {
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Translation Results */}
+                        {result.translation && (
+                            <div className="mt-6 pt-6 border-t border-gray-800">
+                                <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                    <svg
+                                        className="h-5 w-5 text-blue-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                                        />
+                                    </svg>
+                                    Translation ({result.translation.target_language.toUpperCase()})
+                                </h3>
+                                <div className="bg-gray-800 rounded-lg p-6 max-h-64 overflow-y-auto">
+                                    <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                                        {result.translation.text}
+                                    </p>
                                 </div>
                             </div>
                         )}
